@@ -1,0 +1,159 @@
+[
+  
+  {
+    "id": 68462861,
+    "title": "Vector declared in header file isn&#39;t being recognized C++",
+    "body": "<p>I have been having a lot of issues with header files, and now it seems that the vector that is declared in my header file, Polynomial.hpp, is not being recognized in Polynomial.cpp. I have already included std:: which seems to be a common mistake, so I don't know where to go from here.</p>\n<p>Header file:</p>\n<pre><code>#ifndef POLYNOMIAL_HPP\n#define POLYNOMIAL_HPP\n\n#include&lt;vector&gt;\n#include&quot;term.hpp&quot;\n\nclass Polynomial {\n    \nprivate:\n    std::vector&lt;Term&gt; vect;\n    \npublic:\n    Polynomial();\n    ~Polynomial();\n    void add(Term t);\n    void print();\n    Polynomial combineLikeTerms();\n    \n};\n\n#endif\n</code></pre>\n<p>cpp File:</p>\n<pre><code>#include &quot;term.hpp&quot;\n#include &quot;Polynomial.hpp&quot;\n#include&lt;iostream&gt;\n#include&lt;map&gt;\n\nusing namespace std;\n\nvoid add(Term t) {\n    vect.push_back(t);\n}\n\nvoid print() {\n    for(int i = 0; i &lt; vect.size(); i++) {\n        cout &lt;&lt; vect[i].toString();\n    }\n}\n    \nPolynomial combineLikeTerms() {\n    Polynomial poly;\n    map&lt;int, int&gt; combinedPoly;\n    \n    for(int j = 0; j &lt; vect.size(); j++)\n    {\n        combinedPoly.insert(pair&lt;int, int&gt;(vect[j].getExponent(), vect[j].getCoefficient());\n    }\n                            \n    for(map&lt;int,int&gt;::iterator itr = combinedPoly.begin(); itr != combinedPoly.end(); itr++) {\n            Term newTerm(itr-&gt;second, &quot;x&quot;, itr-&gt;first);\n            poly.add(newTerm);\n        }\n        \n    return poly;\n                    \n}\n</code></pre>\n<p>Error (1/6):</p>\n<blockquote>\n<p>Polynomial.cpp:9:5: error: use of undeclared identifier 'vect'\nvect.push_back(t);</p>\n</blockquote>\n",
+    "creation": 1626829098,
+    "score": 0,
+    "user": {
+      "id": 14471249,
+      "name": "mad"
+    },
+    "comments": [
+      {
+        "id": 120995227,
+        "body": "<code>void Polynomial::add(Term t) { ... }</code> and the same for the rest of the member functions you want to implement outside the header.",
+        "user": {
+          "id": 920069,
+          "name": "Retired Ninja"
+        }
+      },
+      {
+        "id": 120995228,
+        "body": "<code>void add(Term t) {...}</code> is not defining the member function. You mean <code>void Polynomoal::add(Term t) {...}</code>",
+        "user": {
+          "id": 1413244,
+          "name": "jwezorek"
+        }
+      }
+    ],
+    "answers": [
+      {
+        "id": 68462887,
+        "body": "<p>In Polynomial.cpp you are defining new functions instead of member functions. Change the definitions to use the class name like</p>\n<pre><code>void Polynomial::add(Term t) {\n    vect.push_back(t);\n}\n</code></pre>\n",
+        "creation": 1626829438,
+        "score": 1,
+        "user": {
+          "id": 1413244,
+          "name": "jwezorek"
+        },
+        "accepted": false,
+        "comments": []
+      },
+      {
+        "id": 68462904,
+        "body": "<p>Your void add(Term T) in Polynomial.cpp is not the member function of the Polynomial.\nYou must implement this function as member of Polynomial like this</p>\n<pre><code>void Polynomial::add(Term T){\n...\n}\n</code></pre>\n",
+        "creation": 1626829629,
+        "score": 1,
+        "user": {
+          "id": 8589793,
+          "name": "secuman"
+        },
+        "accepted": false,
+        "comments": []
+      },
+      {
+        "id": 68462932,
+        "body": "<p>I think this is a syntax error. First, you defined the add method in the Polynomial class of the header file, but the CPP file did not add the class scope, which caused this problem. So you should adjust your code like this:</p>\n<pre class=\"lang-cpp prettyprint-override\"><code>void Polynomial::add(Term t) {\n    vect.push_back(t);\n}\n</code></pre>\n<p>The root cause of this problem is that the methods of the class only work within the scope of the class, and if there is a function with the same name inside the class, it will lead to a naming conflict. Therefore, the root cause of this problem is not the reference error of the vector file.</p>\n",
+        "creation": 1626829997,
+        "score": 1,
+        "user": {
+          "id": 12526570,
+          "name": "Panda"
+        },
+        "accepted": false,
+        "comments": [
+          {
+            "id": 120995526,
+            "body": "To use C++ parlance, if you want to &#39;implement&#39; the method <code>add</code> that you &#39;declared&#39; to be part of your class <code>Polynomial</code>  in a .cpp file, you need to use the correct syntax to tell the compiler that the method is part of the class. Otherwise it will not know to include other class members (e.g. <code>vect</code>) in the scope of the method implementation. Hence: <code>void Polynomial::add(...)</code>. The method signature <code>add(...)</code> in the .cpp file tells the compiler that there is <i>another</i> method outside of the class <code>Polynomial</code> called <code>add</code> and that method will not have access to the members of <code>Polynomial</code>.",
+            "user": {
+              "id": 4525932,
+              "name": "dmedine"
+            }
+          }
+        ]
+      },
+      {
+        "id": 68462954,
+        "body": "<p>The issue is that instead of defining the members <code>add</code> and <code>print</code> of the class <code>Polynomial</code>, you are defining functions in global scope completely unrelated to the class <code>Polynomial</code></p>\n<p>Make changes in the function definition of <code>void add(Term)</code> and <code>void print()</code> to <code>void Polynomial::add(Term)</code> and <code>void Polynomial::print()</code>.</p>\n<pre class=\"lang-cpp prettyprint-override\"><code>#include &quot;term.hpp&quot;\n#include &quot;Polynomial.hpp&quot;\n#include&lt;iostream&gt;\n#include&lt;map&gt;\n\nusing namespace std;\n\nvoid Polynomial::add(Term t) { // change here\n    vect.push_back(t);\n}\n\nvoid Polynomial::print() { //change here\n    for(int i = 0; i &lt; vect.size(); i++) {\n        cout &lt;&lt; vect[i].toString();\n    }\n}\n    \nPolynomial combineLikeTerms() {\n    Polynomial poly;\n    map&lt;int, int&gt; combinedPoly;\n    \n    for(int j = 0; j &lt; vect.size(); j++)\n    {\n        combinedPoly.insert(pair&lt;int, int&gt;(vect[j].getExponent(), vect[j].getCoefficient());\n    }\n                            \n    for(map&lt;int,int&gt;::iterator itr = combinedPoly.begin(); itr != combinedPoly.end(); itr++) {\n            Term newTerm(itr-&gt;second, &quot;x&quot;, itr-&gt;first);\n            poly.add(newTerm);\n        }\n        \n    return poly;\n                    \n}\n</code></pre>\n",
+        "creation": 1626830242,
+        "score": 0,
+        "user": {
+          "id": 12513900,
+          "name": "Anubhav Gupta"
+        },
+        "accepted": false,
+        "comments": []
+      }
+    ]
+  },
+  {
+    "id": 68462550,
+    "title": "I need help on comparing using operators in a guessing game - tkinter",
+    "body": "<p>So basically, I am making a guessing game in Tkinter. I am comparing numbers to check if the number the user has guessed is greater, lesser, or the same compared to the randomly generated number. I am getting an error about my operator so please provide the correct code, thanks. Here is my code:</p>\n<pre class=\"lang-py prettyprint-override\"><code>from tkinter import messagebox\nimport random\nfrom tkinter import *\nroot = Tk()\nr = random.randint(1,100)\nroot.title(&quot;Game thing&quot;)\ndef clear():\n    number_entry1.delete(0,END)\ndef quit():\n    exit()\ndef Guessnumber():\n    if number_entry1.get() &gt; int(r):\n        m1 = messagebox.showinfo(&quot;Sorry&quot;,&quot;Lower&quot;)\n    elif number_entry1.get() &lt; int(r):\n        m2 = messagebox.showinfo(&quot;Sorry&quot;,&quot;Higher&quot;)\n    else:\n        m3 = messagebox.showinfo(&quot;Congratulations&quot;,&quot;You Got It!&quot;)\n\nmessage_label = Label(root,text = &quot;Guess the number form (1 - 100)&quot;)\nmessage_label.grid(row = 0, column = 0)\nnumber_entry1 = Entry(root)\nnumber_entry1.grid(row = 0, column = 1,columnspan = 2)\nguess_button = Button(root,text = &quot;Guess Number&quot;,fg = &quot;green&quot;,command = Guessnumber)\nguess_button.grid(row = 1, column = 0, sticky = W)\nclear_button = Button(root,text = &quot;Clear&quot;,fg = &quot;blue&quot;,command = clear)\nclear_button.grid(row = 1, column = 1, sticky = W)\nquit_button = Button(root,text = &quot;Quit&quot;,fg = &quot;red&quot;,command = exit)\nquit_button.grid(row = 1, column = 2, sticky = E)\n</code></pre>\n<p>Thanks!!! Also if you could I would like an explanation on why I am getting an error.\nAgain thanks for all the help everyone</p>\n",
+    "creation": 1626825353,
+    "score": 0,
+    "user": {
+      "id": 16139854,
+      "name": "TheCodeMan"
+    },
+    "comments": [
+      {
+        "id": 120995207,
+        "body": "What error and what operators?",
+        "user": {
+          "id": 355230,
+          "name": "martineau"
+        }
+      }
+    ],
+    "answers": [
+      {
+        "id": 68462591,
+        "body": "<p>The error (which you should have provided in the question but I already detected it) is caused because You compare a string with an integer here:</p>\n<pre class=\"lang-py prettyprint-override\"><code>def Guessnumber():\n    if number_entry1.get() &gt; int(r):\n        m1 = messagebox.showinfo(&quot;Sorry&quot;,&quot;Lower&quot;)\n    elif number_entry1.get() &lt; int(r):\n        m2 = messagebox.showinfo(&quot;Sorry&quot;,&quot;Higher&quot;)\n    else:\n        m3 = messagebox.showinfo(&quot;Congratulations&quot;,&quot;You Got It!&quot;)\n</code></pre>\n<p>Why? because using the <code>.get()</code> method of <code>Entry</code> widgets returns the value of what was entered in the widget as a string, so the simple solution would be this:</p>\n<pre class=\"lang-py prettyprint-override\"><code>def Guessnumber():\n    if int(number_entry1.get()) &gt; int(r):\n        m1 = messagebox.showinfo(&quot;Sorry&quot;,&quot;Lower&quot;)\n    elif int(number_entry1.get()) &lt; int(r):\n        m2 = messagebox.showinfo(&quot;Sorry&quot;,&quot;Higher&quot;)\n    else:\n        m3 = messagebox.showinfo(&quot;Congratulations&quot;,&quot;You Got It!&quot;)\n</code></pre>\n<p>Oh, and also to mention, this is not necessary: <code>int(r)</code>, because the function <code>random.randint(1,100)</code> already returns an integer so converting it again is redundant.</p>\n<p>And also the function <code>quit()</code> is quite useless since the only thing defined there is the built-in <code>exit()</code> which actually is the same length as in characters so kinda pointless without other functionality</p>\n<p>The &quot;final version&quot; of how that function &quot;should&quot; (to the best practices I know) look is this (also includes some <a href=\"https://www.python.org/dev/peps/pep-0008/\" rel=\"nofollow noreferrer\">PEP 8 - Style Guide for Python Code</a> suggestions and also that there is now only one <code>.get()</code> call which theoretically improves performance since now the method in all cases has to be called only once):</p>\n<pre class=\"lang-py prettyprint-override\"><code>def guess_number():\n    user_input = int(number_entry1.get())\n    if user_input &gt; r:\n        messagebox.showinfo(&quot;Sorry&quot;, &quot;Lower&quot;)\n    elif user_input &lt; r:\n        messagebox.showinfo(&quot;Sorry&quot;, &quot;Higher&quot;)\n    else:\n        messagebox.showinfo(&quot;Congratulations&quot;, &quot;You Got It!&quot;)\n</code></pre>\n",
+        "creation": 1626825759,
+        "score": 3,
+        "user": {
+          "id": 14531062,
+          "name": "Matiiss"
+        },
+        "accepted": false,
+        "comments": [
+          {
+            "id": 120994791,
+            "body": "Thanks a lot! I thought the error was that the variable r was the string. so I made that in(r). I didn&#39;t realize it was number_entry1.get(). Also I&#39;ll make sure to put the error if I have one in my question next time I post. Thanks Again!",
+            "user": {
+              "id": 16139854,
+              "name": "TheCodeMan"
+            }
+          },
+          {
+            "id": 120995195,
+            "body": "You forgot to mention that since <code>messagebox.showinfo()</code> doesn&#39;t really return any useful information, the assignment of its return value to <code>m1</code>, <code>m2</code>, or <code>m3</code> serves no purpose.",
+            "user": {
+              "id": 355230,
+              "name": "martineau"
+            }
+          },
+          {
+            "id": 120995244,
+            "body": "@martineau I added a &quot;final version&quot; to include all the possible little improvements (that I could think of) including what you mentioned about msgboxes",
+            "user": {
+              "id": 14531062,
+              "name": "Matiiss"
+            }
+          },
+          {
+            "id": 120995265,
+            "body": "Congratulations, You Got It! ;&#172;)",
+            "user": {
+              "id": 355230,
+              "name": "martineau"
+            }
+          }
+        ]
+      }
+    ]
+  }
+]
